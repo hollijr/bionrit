@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Extractor</title>
+  <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper green accent-4">
+      <a href="" class="brand-logo center">EXIF-to-CSV Extractor</a>
+    </div>
+  </nav>
+  <div class="container">
+    <form>
+      <div class="card">
+          <div class="card-content">
+            <span class="card-title">Data to Extract</span>
+            <p>
+              <input type="checkbox" class="filled-in" id="longlat" checked="checked" />
+              <label for="longlat">Longitude & Latitude</label>
+            </p>
+            <p>
+              <input type="checkbox" class="filled-in" id="altitude" checked="checked" />
+              <label for="altitude">Altitude</label>
+            </p>
+            <p>
+              <input type="checkbox" class="filled-in" id="week" checked="checked" />
+              <label for="week">Week</label>
+            </p>
+            <p>
+              <input type="checkbox" class="filled-in" id="year"  checked="checked"/>
+              <label for="year">Year</label>
+            </p>
+            <p>
+              <input type="checkbox" class="filled-in" id="keywords" checked="checked" />
+              <label for="keywords">Species</label>
+            </p>
+            <p>
+              <input type="checkbox" class="filled-in" id="temp" />
+              <label for="temp">Temperature</label>
+            </p>
+          </div>
+        </div>
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">From Which File/Folder?</span>
+          <p><input type='file' class="input-field" webkitdirectory mozdirectory msdirectory odirectory directory multiple></p>
+        </div>
+        <div class="card-action">
+            <button type="submit" class="btn waves-effect waves-light">Create CSV</button>
+        </div>
+      </div>
+    </form>
+    <div class="card" id="results"></div>
+  </div>
+  
+
+  
+</body>
+<script src="mainWindow.js"></script>
+</html>
