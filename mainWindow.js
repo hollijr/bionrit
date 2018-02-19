@@ -9,6 +9,8 @@ window.onload = function() {
   form.addEventListener('submit', submitForm);
   var logFile = null;
 
+  // set toggle disable on file buttons
+  
 
   /* 
     Function to call when form is submitted
