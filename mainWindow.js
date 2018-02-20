@@ -10,7 +10,24 @@ window.onload = function() {
   var logFile = null;
 
   // set toggle disable on file buttons
-  
+  document.getElementById("file").addEventListener('change', function(e) {
+    getInput(e);
+  });
+  document.getElementById("folder").addEventListener('change', function(e) {
+    getInput(e);
+  });
+
+  function getInput(e) {
+    e.stopPropagation();
+    // get folder of images or images
+    var f = e.target.files;
+    document.getElementById("data").innerHTML = "Extract from: " + f[0].path;
+    document.getElementById("fid").innerHTML = e.target.id;
+    var other = (e.target.id === "file") ? "folder" : "file";
+    document.getElementById(other).files = null;
+    document.getElementById(other).value = "";
+    console.log(f);
+  }  // end getFolder()
 
   /* 
     Function to call when form is submitted
