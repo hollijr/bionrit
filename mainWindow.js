@@ -14,7 +14,7 @@ window.onload = function() {
   //enableButton("error", false);
 
   // set toggle disable on file buttons
-  document.getElementById("file").addEventListener('change', function(e) {
+  document.getElementById("images").addEventListener('change', function(e) {
     getInput(e);
   });
   document.getElementById("folder").addEventListener('change', function(e) {
@@ -46,7 +46,7 @@ window.onload = function() {
     document.getElementById("data").innerHTML = "Extract from: " + f[0].path;
     document.getElementById("fid").innerHTML = e.target.id;
 
-    var other = (e.target.id === "file") ? "folder" : "file";
+    var other = (e.target.id === "images") ? "folder" : "images";
     document.getElementById(other).files = null;
     document.getElementById(other).value = "";
     console.log(f);
