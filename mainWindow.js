@@ -9,39 +9,129 @@ window.onload = function() {
   form.addEventListener('submit', submitForm);
   var logFile = null;
 
+  enableButton("submit", false);
+  //enableButton("output", false);
+  //enableButton("error", false);
 
-  /* 
-    Function to call when form is submitted
-  */
+  // set toggle disable on file buttons
+  document.getElementById("images").addEventListener('change', function(e) {
+    getInput(e);
+  });
+  document.getElementById("folder").addEventListener('change', function(e) {
+    getInput(e);
+  });
+
+  /* Enable button */
+  function enableButton(btnId, enableOn) {
+    var btn = document.getElementById(btnId);
+    if (enableOn) {
+      btn.classList.remove('disabled');
+      //btn.setAttribute('disabled', '');
+
+    } else {
+      btn.classList.add('disabled');
+      //btn.setAttribute('disabled', true);
+    }
+  }
+
+  /* Get input: called when a file picker button is clicked */
+  function getInput(e) {
+    //e.stopPropagation();  // don't stop propagation since materialize is updating wrapped field
+
+    // display the path to the folder or image(s) just selected
+    var f = e.target.files;
+    var path = getPath(f);
+    document.getElementById("data").innerHTML = "Input|Output folder >> " + path;
+
+    // store which file picker button to use when building the CSV
+    document.getElementById("fid").innerHTML = e.target.id;
+
+    // blank out the filelist and value from the other file picker button
+    // and text display field
+    var other = (e.target.id === "images") ? "folder" : "images";
+    other = document.getElementById(other);
+    other.files = null;
+    other.value = "";
+    other.parentElement.parentElement.querySelector(".file-path").value = "";
+    console.log(f);
+
+    // enable Create CSV button
+    if (f.length > 0) {
+      enableButton("submit", true);
+    }
+  }  // end getInput()
+
+
+  /* Function to call when form is submitted */
   function submitForm(e) {
     e.preventDefault();
 
-    // create output file
-    fs.access(".", fs.constants.W_OK | fs.constants.R_OK, (err) => {
+    // check that file or folder selected
+    var fid = document.getElementById("fid").innerHTML;
+    if (!fid) {
+      // error
+      document.getElementById("data").innerHTML = "<span class='red-text'>No file or folder chosen.</span>";
+      return;
+    }
+
+    // returns a file list
+    var files = document.getElementById(fid).files;
+    if (!files || files.length == 0) return;  // should never happen
+
+    var path = getPath(files);
+
+    // make sure you can read from and write to the selected path
+    fs.access(path, fs.constants.W_OK | fs.constants.R_OK, (err) => {
       if (err) {
         console.error("Cannot read or write to current directory");
         return;
       } else {
-        logFile = fs.createWriteStream("log.txt", "utf8");
-        buildCSV();
+
+        // create a log file
+        logFile = fs.createWriteStream(path + "/log.txt", "utf8");
+        if (logFile) logFile.write(Date.now() + " => Selected file/folder: " + path + "\n");
+        
+        buildCSV(fid, path, files);
       }
     });
 
   } // end submitForm()
 
-  function buildCSV() {
+  /* takes a filelist and returns the path */
+  function getPath(files) {
+
+    // find the path of the first file in the filelist
+    var path = files[0].path;
+
+    // use type to determine whether path is folder or file name.
+    // (type will be empty if a folder; otherwise, it holds file type)
+    var type = files[0].type;
+    if (type) {
+      // strip file name out of path
+      path = path.substring(0, path.lastIndexOf('/'));
+    }
+
+    return path;
+  }
+
+  /* build the CSV file */
+  function buildCSV(fid, path, files) {
     // get values from checkboxes
     var keys = buildDataTagsArray();
 
-    // get files
-    var folder = getFolder();
-    var files = getFiles(folder);
-
-    if (files.length > 0) {
-      processImages(files, keys);
+    var images = [];
+    if (fid == "folder") {
+      images = getFiles(path);
+    } else {
+      for (let i = 0; i < files.length; i++) {
+        images.push(files[i].path);
+      }
+    }
+    
+    if (images && images.length > 0) {
+      processImages(path, images, keys);
     }   
   } // end buildCSV()
-
 
   /*
     Build an array of data elements that user selected to
@@ -74,6 +164,10 @@ window.onload = function() {
       data.push("Week");
       datestamp = true;
     }
+    if (form.querySelector("#month").checked) {
+      data.push("Month");
+      datestamp = true;
+    }
     if (form.querySelector("#year").checked) {
       data.push("Year");
       datestamp = true;
@@ -87,27 +181,12 @@ window.onload = function() {
       tags.push("Copyright");
       data.push("Copyright");
     }
-    if (form.querySelector("#temp").checked) {
-   
-    }
+
     return {"data": data, "tags": tags};
   } // end buildDataTagsArray()
 
-  /*
-    Get the path to the folder selected in the form
-  */
-  function getFolder() {
-    // get folder of images or images
-    var folder = form.querySelector("input[type=file]").files;
-    if (logFile) logFile.write(Date.now() + " => Opening " + folder[0].path + "\n");
-    return folder[0].path;
 
-  }  // end getFolder()
-
-
-  /*
-    Read the .jpg files from the folder selected by user
-  */
+  /* Read the .jpg files from the folder selected by user */
   function getFiles(folder, fileList) {
     fileList = fileList || [];
 
@@ -134,9 +213,10 @@ window.onload = function() {
     convert it to comma-separated values, which are
     stored in output file
   */
-  function processImages(files, keys) {
+  function processImages(path, files, keys) {
     try {
-      var fileStream = fs.createWriteStream("output.csv", "utf8");
+
+      var fileStream = fs.createWriteStream(path + "/output.csv", "utf8");
       
       // go through each file and extract
       // the key:value pairs for the needed tags
@@ -156,14 +236,24 @@ window.onload = function() {
         // output data to file
         fileStream.write(csvData);
 
+        // enable Get CSV button
+        //enableButton("output", true);
+        document.getElementById("csvFile").innerHTML = "<strong>CSV File</strong>: " + path + "/output.csv";
+
       }  
     } catch (exc) {
       if (logFile) logFile.write(Date.now() + " => Error occurred while creating or writing to file stream: " + exc.message + "\n");
+
+    
     } finally {
       // display message to show file is complete
       // along with link/button to get file
       fileStream.end();
       logFile.end();
+
+      // enable Log File buttons
+      //enableButton("error", true);
+      document.getElementById("logFile").innerHTML = "<strong>Log File</strong>: "  + path + "/log.txt";
     }
   }  // end processImages()
 
@@ -245,6 +335,7 @@ window.onload = function() {
           data += decDeg + ",";
         } else {
           console.error("Extracted data is missing GPSLatitude");
+          data += ",";
         }
         if (rawData.hasOwnProperty("GPSLongitude")) {
           decDeg = convertToDegrees(rawData["GPSLongitude"]);
@@ -256,6 +347,7 @@ window.onload = function() {
           data += decDeg + ",";
         } else {
           console.error("Extracted data is missing GPSLongitude");
+          data += ",";
         }
       } else if ( key === "GPSAltitude") {
         if (rawData.hasOwnProperty("GPSAltitude")) {
@@ -271,6 +363,7 @@ window.onload = function() {
           data += alt + ",";
         } else {
           console.error("Extracted data is missing GPSAltitude");
+          data += ",";
         }
       } else if (key === "Week") {   // convert time to week
         if (date) {
@@ -279,6 +372,16 @@ window.onload = function() {
           data += week + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
+          data += ",";
+        }
+      } else if (key === "Month") {  // convert time to month
+        if (date) {
+          var month = date.getMonth();
+          //data += "Year:";
+          data += month + ",";
+        } else {
+          console.error("Extracted data is missing DateTimeOriginal");
+          data += ",";
         }
       } else if (key === "Year") {  // convert time to year
         if (date) {
@@ -287,6 +390,7 @@ window.onload = function() {
           data += year + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
+          data += ",";
         }
       } else {  // extract rawData[key] as a string
         if (rawData.hasOwnProperty(key)) {
@@ -311,7 +415,7 @@ window.onload = function() {
     var degrees = null;
     if (gps.length === 3) {
       degrees = (gps[0][0] / gps[0][1]) + ((gps[1][0] / gps[1][1]) / 60) + ((gps[2][0] / gps[2][1]) / 3600);
-      degrees = degrees.toFixed(2);
+      //degrees = degrees.toFixed(2);
     }
     return degrees;
   }
