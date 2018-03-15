@@ -1,0 +1,34 @@
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* override materialize settings */
+.input-field.inline input {
+  height: 1rem;
+  width: inherit;
+  line-height: inherit;
+}
+.input-field {
+  margin-top: 0;
+}
+.tight-lower {
+  margin-bottom: 0.5rem;
+}
+input[type=number]:not(.browser-default) {
+  width: 5rem;
+  margin-bottom: 0;
+}
+input[type=text]:not(.browser-default) {
+  width: 16rem;
+  margin-bottom: 0;
+}
+.label {
+  color: #9e9e9e;
+}
+input[type=text]:not(.browser-default).file-path {
+  width: 80%;
+}
+.file-field .btn {
+  width: 20%;
+}

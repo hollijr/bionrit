@@ -9,6 +9,10 @@ window.onload = function() {
   form.addEventListener('submit', submitForm);
   var logFile = null;
 
+  enableButton("submit", false);
+  //enableButton("output", false);
+  //enableButton("error", false);
+
   // set toggle disable on file buttons
   document.getElementById("file").addEventListener('change', function(e) {
     getInput(e);
@@ -16,17 +20,41 @@ window.onload = function() {
   document.getElementById("folder").addEventListener('change', function(e) {
     getInput(e);
   });
+  document.getElementById("outdir").addEventListener('change', function(e) {
+    getOutPath(e);
+  });
+
+  function getOutPath(e) {
+    e.stopPropagation();
+
+    // get folder of images or images
+    var f = e.target.files;
+    document.getElementById("outpath").innerHTML = "Write to: " + f[0].path;
+
+    // enable Create CSV button
+    var fid = document.getElementById("fid").innerHTML;
+    if (fid && document.getElementById(fid).files.length > 0) {
+      enableButton("submit", true);
+    }
+  }
 
   function getInput(e) {
     e.stopPropagation();
+
     // get folder of images or images
     var f = e.target.files;
     document.getElementById("data").innerHTML = "Extract from: " + f[0].path;
     document.getElementById("fid").innerHTML = e.target.id;
+
     var other = (e.target.id === "file") ? "folder" : "file";
     document.getElementById(other).files = null;
     document.getElementById(other).value = "";
     console.log(f);
+
+    // enable Create CSV button
+    if (document.getElementById("outdir").files.length > 0) {
+      enableButton("submit", true);
+    }
   }  // end getFolder()
 
   /* 
@@ -41,21 +69,56 @@ window.onload = function() {
         console.error("Cannot read or write to current directory");
         return;
       } else {
-        logFile = fs.createWriteStream("log.txt", "utf8");
+        // check that file or folder selected
+        var valid = document.getElementById("fid").innerHTML;
+        if (!valid) {
+          // error
+          document.getElementById("data").innerHTML = "<span class='red-text'>No file or folder chosen.</span>";
+          return;
+        }
+
+        // check that output folder selected
+        valid = document.getElementById("outdir").value;
+        if (!valid) {
+          // error
+          document.getElementById("outpath").innerHTML = "<span class='red-text'>Please choose folder where CSV should be written.</span>";
+          return;
+        }
+        var path = document.getElementById("outdir").files[0].path;
+        logFile = fs.createWriteStream(path + "/log.txt", "utf8");
         buildCSV();
       }
     });
 
   } // end submitForm()
 
+
+  function enableButton(btnId, enableOn) {
+    var btn = document.getElementById(btnId);
+    if (enableOn) {
+      btn.classList.remove('disabled');
+      //btn.setAttribute('disabled', '');
+
+    } else {
+      btn.classList.add('disabled');
+      //btn.setAttribute('disabled', true);
+    }
+  }
+
   function buildCSV() {
     // get values from checkboxes
     var keys = buildDataTagsArray();
 
-    // get files
-    var folder = getFolder();
-    var files = getFiles(folder);
-
+    // get file/files
+    var fid = document.getElementById("fid").innerHTML;
+    var path = getFilePath(fid);
+    var files = [];
+    if (fid == "folder") {
+      files = getFiles(path);
+    } else {
+      files.push(path);
+    }
+    
     if (files.length > 0) {
       processImages(files, keys);
     }   
@@ -93,6 +156,10 @@ window.onload = function() {
       data.push("Week");
       datestamp = true;
     }
+    if (form.querySelector("#month").checked) {
+      data.push("Month");
+      datestamp = true;
+    }
     if (form.querySelector("#year").checked) {
       data.push("Year");
       datestamp = true;
@@ -115,10 +182,10 @@ window.onload = function() {
   /*
     Get the path to the folder selected in the form
   */
-  function getFolder() {
+  function getFilePath(id) {
     // get folder of images or images
-    var folder = form.querySelector("input[type=file]").files;
-    if (logFile) logFile.write(Date.now() + " => Opening " + folder[0].path + "\n");
+    var folder = document.getElementById(id).files;
+    if (logFile) logFile.write(Date.now() + " => Selected file/folder: " + folder[0].path + "\n");
     return folder[0].path;
 
   }  // end getFolder()
@@ -155,7 +222,8 @@ window.onload = function() {
   */
   function processImages(files, keys) {
     try {
-      var fileStream = fs.createWriteStream("output.csv", "utf8");
+      var path = document.getElementById("outdir").files[0].path;
+      var fileStream = fs.createWriteStream(path + "/output.csv", "utf8");
       
       // go through each file and extract
       // the key:value pairs for the needed tags
@@ -175,14 +243,24 @@ window.onload = function() {
         // output data to file
         fileStream.write(csvData);
 
+        // enable Get CSV button
+        //enableButton("output", true);
+        document.getElementById("csvFile").innerHTML = "<strong>CSV File</strong>: " + path + "/output.csv";
+
       }  
     } catch (exc) {
       if (logFile) logFile.write(Date.now() + " => Error occurred while creating or writing to file stream: " + exc.message + "\n");
+
+    
     } finally {
       // display message to show file is complete
       // along with link/button to get file
       fileStream.end();
       logFile.end();
+
+      // enable Log File buttons
+      //enableButton("error", true);
+      document.getElementById("logFile").innerHTML = "<strong>Log File</strong>: "  + path + "/log.txt";
     }
   }  // end processImages()
 
@@ -264,6 +342,7 @@ window.onload = function() {
           data += decDeg + ",";
         } else {
           console.error("Extracted data is missing GPSLatitude");
+          data += ",";
         }
         if (rawData.hasOwnProperty("GPSLongitude")) {
           decDeg = convertToDegrees(rawData["GPSLongitude"]);
@@ -275,6 +354,7 @@ window.onload = function() {
           data += decDeg + ",";
         } else {
           console.error("Extracted data is missing GPSLongitude");
+          data += ",";
         }
       } else if ( key === "GPSAltitude") {
         if (rawData.hasOwnProperty("GPSAltitude")) {
@@ -290,6 +370,7 @@ window.onload = function() {
           data += alt + ",";
         } else {
           console.error("Extracted data is missing GPSAltitude");
+          data += ",";
         }
       } else if (key === "Week") {   // convert time to week
         if (date) {
@@ -298,6 +379,16 @@ window.onload = function() {
           data += week + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
+          data += ",";
+        }
+      } else if (key === "Month") {  // convert time to month
+        if (date) {
+          var month = date.getMonth();
+          //data += "Year:";
+          data += month + ",";
+        } else {
+          console.error("Extracted data is missing DateTimeOriginal");
+          data += ",";
         }
       } else if (key === "Year") {  // convert time to year
         if (date) {
@@ -306,6 +397,7 @@ window.onload = function() {
           data += year + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
+          data += ",";
         }
       } else {  // extract rawData[key] as a string
         if (rawData.hasOwnProperty(key)) {
@@ -330,7 +422,7 @@ window.onload = function() {
     var degrees = null;
     if (gps.length === 3) {
       degrees = (gps[0][0] / gps[0][1]) + ((gps[1][0] / gps[1][1]) / 60) + ((gps[2][0] / gps[2][1]) / 3600);
-      degrees = degrees.toFixed(2);
+      //degrees = degrees.toFixed(2);
     }
     return degrees;
   }
