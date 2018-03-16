@@ -1,5 +1,9 @@
 'use strict';
 
+$(document).ready(function() {
+  $('select').material_select();
+});
+
 window.onload = function() {
   const electron = require('electron');
   const {ipcRenderer} = electron;
@@ -19,12 +23,10 @@ window.onload = function() {
   let now = new Date();
   document.getElementById("fromYr").value = 
     document.getElementById("toYr").value = now.getFullYear();
-  document.getElementById("fromMo").value = 
-    document.getElementById("toMo").value = MONTHS[now.getMonth()];
   document.getElementById("fromWk").value = 
     document.getElementById("toWk").value = getWeekNum(now);
-   
-
+  //document.querySelector("select").material_select();
+  
   // set toggle disable on file buttons
   document.getElementById("images").addEventListener('change', function(e) {
     getInput(e);

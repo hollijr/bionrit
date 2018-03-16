@@ -24,7 +24,6 @@ input[type=number]:not(.browser-default) {
 }
 input[type=text]:not(.browser-default) {
   width: 16rem;
-  margin-bottom: 0;
 }
 .label {
   color: #9e9e9e;
@@ -42,4 +41,32 @@ input[type=text]:not(.browser-default).file-path {
 }
 .card .card-content {
   padding: 16px;
+}
+.select-wrapper {
+  display: inline-block;
+}
+.select-wrapper span.caret {
+  height: inherit;
+}
+.dropdown-content li>span {
+  line-height: initial;
+  padding-top: 0;
+}
+.dropdown-content li {
+  min-height: 1px;
+}
+.select-wrapper [type=checkbox]:not(:checked),
+.select-wrapper [type=checkbox]:checked {
+  vertical-align: middle;
+}
+.select-wrapper [type=checkbox]+label {
+  display: inline;
+}
+.select-wrapper [type=checkbox]::before,
+.select-wrapper [type=checkbox]::after {
+  margin-top: 0;
+  vertical-align: top;
+}
+.input-field.inline .select-dropdown {
+  margin-bottom: 0px;
 }
