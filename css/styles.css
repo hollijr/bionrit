@@ -1,6 +1,7 @@
 .hidden {
   visibility: hidden;
   opacity: 0;
+  display: none;
 }
 
 /* override materialize settings */
@@ -18,6 +19,8 @@
 input[type=number]:not(.browser-default) {
   width: 5rem;
   margin-bottom: 0;
+  direction: rtl;
+  text-align: right;
 }
 input[type=text]:not(.browser-default) {
   width: 16rem;
@@ -29,7 +32,14 @@ input[type=text]:not(.browser-default) {
 input[type=text]:not(.browser-default).file-path {
   width: 80%;
   color: black;
+  
 }
 .file-field .btn {
   width: 20%;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  min-height: 1px;
+}
+.card .card-content {
+  padding: 16px;
 }

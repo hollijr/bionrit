@@ -6,12 +6,24 @@ window.onload = function() {
   const fs = require('fs');
   const path = require('path');
   const form = document.querySelector('form');
+
+  const MONTHS = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"];
   form.addEventListener('submit', submitForm);
   var logFile = null;
 
+  // disable the submit button initially
   enableButton("submit", false);
-  //enableButton("output", false);
-  //enableButton("error", false);
+
+  // default the values of the filter
+  let now = new Date();
+  document.getElementById("fromYr").value = 
+    document.getElementById("toYr").value = now.getFullYear();
+  document.getElementById("fromMo").value = 
+    document.getElementById("toMo").value = MONTHS[now.getMonth()];
+  document.getElementById("fromWk").value = 
+    document.getElementById("toWk").value = getWeekNum(now);
+   
 
   // set toggle disable on file buttons
   document.getElementById("images").addEventListener('change', function(e) {
@@ -53,6 +65,11 @@ window.onload = function() {
     other.files = null;
     other.value = "";
     other.parentElement.parentElement.querySelector(".file-path").value = "";
+
+    // also erase output file messages from previous runs
+    document.getElementById("csvFile").innerHTML = "";
+    document.getElementById("logFile").innerHTML = "";
+
     console.log(f);
 
     // enable Create CSV button
