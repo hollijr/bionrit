@@ -42,6 +42,7 @@ input[type=text]:not(.browser-default).file-path {
 .card .card-content {
   padding: 16px;
 }
+/* multiple selection menu settings */
 .select-wrapper {
   display: inline-block;
 }

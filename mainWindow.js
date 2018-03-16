@@ -21,11 +21,16 @@ window.onload = function() {
 
   // default the values of the filter
   let now = new Date();
+  /*
+  let now = new Date();
   document.getElementById("fromYr").value = 
     document.getElementById("toYr").value = now.getFullYear();
   document.getElementById("fromWk").value = 
-    document.getElementById("toWk").value = getWeekNum(now);
-  //document.querySelector("select").material_select();
+    document.getElementById("toWk").value = getWeekNum(now); 
+    */
+
+  // create date ranges for week numbers (dropdown menu)
+
   
   // set toggle disable on file buttons
   document.getElementById("images").addEventListener('change', function(e) {
@@ -386,7 +391,7 @@ window.onload = function() {
         }
       } else if (key === "Week") {   // convert time to week
         if (date) {
-          var week = getWeekNum(date);
+          var week = date.getWeek();  // custom method added to Date prototype
           //data += "Week:";
           data += week + ",";
         } else {
@@ -440,27 +445,58 @@ window.onload = function() {
   }
 
 
-  function getWeekNum(date) {
+  // This script is released to the public domain and may be used, modified and
+  // distributed without restrictions. Attribution not necessary but appreciated.
+  // Source: https://weeknumber.net/how-to/javascript
 
-    var year = date.getFullYear();
-    
-    // convert to week uses scheme where 1/1 is week 1 and
-    // following Sunday starts week 2
-    var start = new Date(year, 0, 1);
+  // Returns the ISO week of the date.
+  Date.prototype.getWeek = function() {
+    var date = new Date(this.getTime());
+    date.setHours(0, 0, 0, 0);
+    // Thursday in current week decides the year.
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    // January 4 is always in week 1.
+    var week1 = new Date(date.getFullYear(), 0, 4);
+    // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                          - 3 + (week1.getDay() + 6) % 7) / 7);
+  }
 
-    // time of second week start (in case first week is partial)
-    var sunday = 8 - start.getDay();
-    var second = new Date(year, 0, sunday);
+  // Returns the four-digit year corresponding to the ISO week of the date.
+  Date.prototype.getWeekYear = function() {
+    var date = new Date(this.getTime());
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    return date.getFullYear();
+  }
 
-    var week = 1;
-    var diff = date.valueOf() - second.valueOf();
-    if (diff >= 0) {
+  /* ISO Week Date always starts on Monday and first week always
+     includes Thursday */
+  function createWeekMenu(year) {
 
-      // difference in weeks between photo's date and start of second week
-      diff = Math.ceil(diff / (7 * 24 * 60 * 60 * 1000));  
-      week += diff;
+    var menu = [];
+    let start = new Date(year, 0, 1);
+
+    // find number of days Jan. 1 is away from Thursday
+    // since Thursday is always in week 1
+    let day = 4 - start.getDay();
+    if (day < 0) day += 7;
+
+    // find first Thursday on or after Jan. 1, then
+    // back up three days to Monday (start of week 1)
+    start.setDate(start.getDate() + day - 3);
+    console.log("Date: " + start.toDateString() + ", Day: " + start.getDay() + 
+              ", Week: " + start.getWeek());
+
+    menu.push(start);
+
+    // increase each week and record start of week date
+    var end = new Date(year, 11, 31);
+    while (start < end) {
+      start.setTime(start.getTime() + (7 * 24 * 60 * 60 * 1000));  
+      menu.push(start.toDateString());
     }
-    return week;
+
+    return menu;
   }
 
 };
