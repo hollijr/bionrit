@@ -11,26 +11,29 @@ window.onload = function() {
   const path = require('path');
   const form = document.querySelector('form');
 
-  const MONTHS = ["January", "February", "March", "April", "May", "June",
-                  "July", "August", "September", "October", "November", "December"];
+  const YEAR = 2000;
+
   form.addEventListener('submit', submitForm);
   var logFile = null;
 
   // disable the submit button initially
   enableButton("submit", false);
 
-  // default the values of the filter
-  let now = new Date();
-  /*
-  let now = new Date();
-  document.getElementById("fromYr").value = 
-    document.getElementById("toYr").value = now.getFullYear();
-  document.getElementById("fromWk").value = 
-    document.getElementById("toWk").value = getWeekNum(now); 
-    */
-
   // create date ranges for week numbers (dropdown menu)
+  // initialize
+  $('select').material_select();
 
+  // setup listener for custom event to re-initialize on change
+  $('select').on('contentChanged', function() {
+    $(this).material_select();
+  });
+
+  // set default menus 
+  var year = new Date().getFullYear();
+  setYearSelectionMenu(year);
+  
+  // for week numbers
+  setWeekSelectionMenu(year);
   
   // set toggle disable on file buttons
   document.getElementById("images").addEventListener('change', function(e) {
@@ -39,6 +42,48 @@ window.onload = function() {
   document.getElementById("folder").addEventListener('change', function(e) {
     getInput(e);
   });
+  document.getElementById("yearSelect").addEventListener('change', function(e) {
+    if ($("#weekSelect").val() == "") {
+      if ($(this).val() == "") {
+        clearMenu($("#weekSelect"));
+        setWeekSelectionMenu(new Date().getFullYear());
+      } else {
+        console.log("year: " + $(this).val() + ", week: " + $("#weekSelect").val());
+      }
+    } 
+  });
+
+  /* year selection menu */
+  function setYearSelectionMenu(year) {
+    var $yearSelect = $("#yearSelect");
+    for (let i = year; i >= YEAR; i--) {
+      var $newOpt = $("<option>").attr("value",i).text(i);
+      $yearSelect.append($newOpt);
+    }
+    // fire custom event anytime you've updated select
+    $("#yearSelect").trigger('contentChanged');
+  }
+
+  /* year selection menu */
+  function setWeekSelectionMenu(year) {
+    var $weekSelect = $("#weekSelect");
+    var menu = createWeekMenu(year);
+    for (let i = 0; i < menu.length; i++) {
+      var $newOpt = $("<option>").attr("value",i).text(menu[i] 
+                    + " (" + (i + 1) + ")");
+      $weekSelect.append($newOpt);
+    }
+    // fire custom event anytime you've updated select
+    $("#weekSelect").trigger('contentChanged');
+  }
+
+  /* add a default option to the menu */
+  function clearMenu($menuId) {
+    $menuId.empty();
+    var $newOpt = $("<option>").attr("value","");
+    $newOpt.attr("disabled","disabled").attr("selected", "selected").text("");
+    $menuId.append($newOpt);
+  }
 
   /* Enable button */
   function enableButton(btnId, enableOn) {
@@ -484,16 +529,19 @@ window.onload = function() {
     // find first Thursday on or after Jan. 1, then
     // back up three days to Monday (start of week 1)
     start.setDate(start.getDate() + day - 3);
-    console.log("Date: " + start.toDateString() + ", Day: " + start.getDay() + 
-              ", Week: " + start.getWeek());
-
-    menu.push(start);
+    var dt = start.toDateString().split(" ");
+    day = dt[1] + "-" + start.getDate() + "-" 
+          + start.getFullYear().toString().substring(2);
+    menu.push(day);
 
     // increase each week and record start of week date
     var end = new Date(year, 11, 31);
     while (start < end) {
       start.setTime(start.getTime() + (7 * 24 * 60 * 60 * 1000));  
-      menu.push(start.toDateString());
+      dt = start.toDateString().split(" ");
+      day = dt[1] + "-" + start.getDate() + "-" 
+          + start.getFullYear().toString().substring(2);
+      menu.push(day);
     }
 
     return menu;

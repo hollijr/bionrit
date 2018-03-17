@@ -45,6 +45,10 @@ input[type=text]:not(.browser-default).file-path {
 /* multiple selection menu settings */
 .select-wrapper {
   display: inline-block;
+  text-align: right;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 .select-wrapper span.caret {
   height: inherit;
@@ -70,4 +74,24 @@ input[type=text]:not(.browser-default).file-path {
 }
 .input-field.inline .select-dropdown {
   margin-bottom: 0px;
+}
+/*
+.input-field>select.browser-default {
+  display: inline-block;
+  position: relative;
+  height: inherit;
+  opacity: 1;
+}
+*/
+select {
+  height: 2rem;
+}
+span.label {
+  text-align: right;
+  width: 15%;
+}
+.right {
+  position: absolute;
+  right: 0;
+  top: 0;
 }
