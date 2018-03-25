@@ -301,7 +301,6 @@ window.onload = function() {
 
     // get filters
     var filters = getFilters();
-   
 
     // TODO: break up csv files
     
