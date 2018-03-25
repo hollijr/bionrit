@@ -1,9 +1,5 @@
 'use strict';
 
-$(document).ready(function() {
-  $('select').material_select();
-});
-
 window.onload = function() {
   const electron = require('electron');
   const {ipcRenderer} = electron;
@@ -13,14 +9,13 @@ window.onload = function() {
 
   const YEAR = 2000;
 
+  /************* SETUP ****************/
   form.addEventListener('submit', submitForm);
   var logFile = null;
 
   // disable the submit button initially
   enableButton("submit", false);
-
-  // create date ranges for week numbers (dropdown menu)
-  // initialize
+  
   $('select').material_select();
 
   // setup listener for custom event to re-initialize on change
@@ -53,6 +48,23 @@ window.onload = function() {
     } 
   });
 
+  // toggle csv granulation between month & week
+  document.getElementById("permo").addEventListener('click', (e)=> {toggleBox(e, 'perwk');});
+  document.getElementById("permo").addEventListener('change', (e)=> {toggleBox(e, 'perwk');});
+
+  document.getElementById("perwk").addEventListener('click', (e)=> {toggleBox(e, 'permo');});
+  document.getElementById("perwk").addEventListener('change', (e)=> {toggleBox(e, 'permo');});
+
+  /************ FUNCTIONS *****************/
+
+  /* toggle checking between two checkboxes */
+  function toggleBox(e, otherId) {
+    if (e.target.checked && document.activeElement == e.target) {
+      e.stopPropagation();
+      document.getElementById(otherId).checked = "";
+    }
+  }
+
   /* year selection menu */
   function setYearSelectionMenu(year) {
     var $yearSelect = $("#yearSelect");
@@ -69,8 +81,7 @@ window.onload = function() {
     var $weekSelect = $("#weekSelect");
     var menu = createWeekMenu(year);
     for (let i = 0; i < menu.length; i++) {
-      var $newOpt = $("<option>").attr("value",i).text(menu[i] 
-                    + " (" + (i + 1) + ")");
+      var $newOpt = $("<option>").attr("value",i).text((i + 1) + " (" + menu[i] + ")");
       $weekSelect.append($newOpt);
     }
     // fire custom event anytime you've updated select
@@ -150,6 +161,7 @@ window.onload = function() {
     var path = getPath(files);
 
     // make sure you can read from and write to the selected path
+    // TODO: figure out how to make this work in production mode
     fs.access(path, fs.constants.W_OK | fs.constants.R_OK, (err) => {
       if (err) {
         console.error("Cannot read or write to current directory");
@@ -185,9 +197,11 @@ window.onload = function() {
 
   /* build the CSV file */
   function buildCSV(fid, path, files) {
+
     // get values from checkboxes
     var keys = buildDataTagsArray();
 
+    // build list of images
     var images = [];
     if (fid == "folder") {
       images = getFiles(path);
@@ -283,6 +297,14 @@ window.onload = function() {
     stored in output file
   */
   function processImages(path, files, keys) {
+    
+
+    // get filters
+    var filters = getFilters();
+   
+
+    // TODO: break up csv files
+    
     try {
 
       var fileStream = fs.createWriteStream(path + "/output.csv", "utf8");
@@ -325,6 +347,60 @@ window.onload = function() {
       document.getElementById("logFile").innerHTML = "<strong>Log File</strong>: "  + path + "/log.txt";
     }
   }  // end processImages()
+
+  /*
+    get CSV filters
+  */
+  function getFilters() {
+    var inputValues = document.querySelectorAll(".data_filter input[type='text']");
+
+    // convert months to numbers
+    var abbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var months = [false,false,false,false,false,false,false,false,false,false,false,false];
+    var mon = inputValues[1].value;
+    if (mon) {
+      mon = mon.trim().split(", ");
+      for (let i = 0; i < mon.length; i++) {
+        months[abbr.indexOf(mon[i])] = true;
+      }
+    }
+    
+    // years
+    var years = inputValues[0].value;
+    if (years) {
+      years = years.trim().split(", ");
+    }
+    
+    // remove week dates
+    var weeks = inputValues[2].value;
+    if (weeks) {
+      weeks = weeks.replace(/ \([\w][\w][\w]-[\d][\d]?-[\d][\d]\)/g, '');
+      weeks = weeks.split(', ');
+    }
+    
+    // species
+    var species = inputValues[3].value;
+    if (species) {
+      species = species.trim().split(", ");
+    }
+    
+    var filters = {};
+    filters['year'] = years;
+    filters['month'] = months;
+    filters['week'] = weeks;
+    filters['species'] = species;
+    
+    var csv = {};
+    csv['yr'] = document.getElementById("peryr").checked;
+    csv['mo'] = document.getElementById("permo").checked;
+    csv['wk'] = document.getElementById("perwk").checked;
+    csv['sp'] = document.getElementById("perspec").checked;
+    filters['csv'] = csv;
+
+    console.log(filters);
+
+    return filters;
+  }
 
 
   /* 
@@ -385,6 +461,7 @@ window.onload = function() {
         if (logFile) logFile.write(Date.now() + " => Date format was unexpected: " + rawData.hasOwnProperty("DateTimeOriginal") + "\n");
       }
     }
+    console.log(date);
 
     for (let i = 0; i < keys.data.length; i++) {
       var key = keys.data[i], decDeg;
