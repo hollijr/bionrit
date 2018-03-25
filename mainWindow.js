@@ -302,8 +302,6 @@ window.onload = function() {
     // get filters
     var filters = getFilters();
 
-    // TODO: break up csv files
-    
     try {
 
       var fileStream = fs.createWriteStream(path + "/output.csv", "utf8");
@@ -319,12 +317,17 @@ window.onload = function() {
           }
         }
 
-        // manipulate the data to get it into the 
+        // filter and manipulate the data to get it into the 
         // needed format
-        var csvData = processRawData(rawData, keys);
+        var csvData = processRawData(rawData, keys, filters);
 
         // output data to file
-        fileStream.write(csvData);
+        if (csvData) {
+          fileStream.write(csvData);
+        }
+
+        // TODO: break up csv files
+        
 
         // enable Get CSV button
         //enableButton("output", true);
@@ -380,7 +383,7 @@ window.onload = function() {
     // species
     var species = inputValues[3].value;
     if (species) {
-      species = species.trim().split(", ");
+      species = species.trim().toUpperCase().split(", ");
     }
     
     var filters = {};
@@ -415,9 +418,9 @@ window.onload = function() {
     // parse using exif-parser
     const parser = require('exif-parser').create(buffer);
     parser.enableSimpleValues(false);
-    var allExif = parser.parse();
+    var allExif = parser.parse(); // returns all exif data in photo
 
-    // pull desired values into results object
+    // pull just our tag values into results object
     var subsetExif = {};
     
     for (let i = 0; i < tags.length; i++) {
@@ -443,7 +446,7 @@ window.onload = function() {
     Year
     Species
   */
-  function processRawData(rawData, keys) {
+  function processRawData(rawData, keys, filters) {
     var data = "";
 
     // fix format of date
@@ -514,6 +517,11 @@ window.onload = function() {
         if (date) {
           var week = date.getWeek();  // custom method added to Date prototype
           //data += "Week:";
+
+          // if a week filter exists and photo week doesn't match, return immediately
+          if (filters['week'] && !filters['week'].includes(week)) {  
+            return;
+          }
           data += week + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
@@ -523,6 +531,11 @@ window.onload = function() {
         if (date) {
           var month = date.getMonth();
           //data += "Year:";
+
+          // if a month filter exists and photo month doesn't match, return immediately
+          if (filters['month'] && !filters['month']) {  
+            return;
+          }
           data += month + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
@@ -532,6 +545,11 @@ window.onload = function() {
         if (date) {
           var year = date.getFullYear();
           //data += "Year:";
+
+          // if a year filter exists and photo year doesn't match, return immediately
+          if (filters['year'] && !filters['year'].includes(year)) {  
+            return;
+          }
           data += year + ",";
         } else {
           console.error("Extracted data is missing DateTimeOriginal");
@@ -540,6 +558,12 @@ window.onload = function() {
       } else {  // extract rawData[key] as a string
         if (rawData.hasOwnProperty(key)) {
           //data += key + ":";
+
+          // if a week filter exists and photo week doesn't match, return immediately
+          if (key == "Copyright" && filters['species']) {  
+            var species = rawData["Copyright"].toUpperCase();
+            if (!filters['species'].includes(species)) return;
+          }
           data += '"' + rawData[key] + '",';
         } else {
           console.error("Extracted data is missing " + key);
