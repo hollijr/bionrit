@@ -533,7 +533,7 @@ window.onload = function() {
           //data += "Year:";
 
           // if a month filter exists and photo month doesn't match, return immediately
-          if (filters['month'] && !filters['month']) {  
+          if (!filters['month'][month]) {  
             return;
           }
           data += month + ",";
