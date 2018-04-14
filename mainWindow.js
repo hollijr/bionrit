@@ -331,7 +331,8 @@ window.onload = function() {
 
         // enable Get CSV button
         //enableButton("output", true);
-        document.getElementById("csvFile").innerHTML = "<strong>CSV File</strong>: " + path + "/output.csv";
+        document.getElementById("csvFile").innerHTML = "<strong>CSV File</strong>: " + path + "/output.csv   (" 
+                                                      + toSimpleDate(new Date()) + ")";
 
       }  
     } catch (exc) {
@@ -346,9 +347,19 @@ window.onload = function() {
 
       // enable Log File buttons
       //enableButton("error", true);
-      document.getElementById("logFile").innerHTML = "<strong>Log File</strong>: "  + path + "/log.txt";
+      document.getElementById("logFile").innerHTML = "<strong>Log File</strong>: "  + path + "/log.txt   (" 
+                                                    + toSimpleDate(new Date()) + ")";
     }
   }  // end processImages()
+
+  /* 
+    format date w/o GMT
+  */
+ function toSimpleDate(date) {
+   var dateString = date.toString();
+   dateString = dateString.substring(0, dateString.indexOf("GMT"));
+   return dateString;
+ }
 
   /*
     get CSV filters
