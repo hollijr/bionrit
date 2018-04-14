@@ -358,14 +358,15 @@ window.onload = function() {
 
     // convert months to numbers
     var abbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var months = [false,false,false,false,false,false,false,false,false,false,false,false];
     var mon = inputValues[1].value;
+    var months;
     if (mon) {
+      months = [false,false,false,false,false,false,false,false,false,false,false,false];
       mon = mon.trim().split(", ");
       for (let i = 0; i < mon.length; i++) {
         months[abbr.indexOf(mon[i])] = true;
       }
-    }
+    } 
     
     // years
     var years = inputValues[0].value;
@@ -533,7 +534,7 @@ window.onload = function() {
           //data += "Year:";
 
           // if a month filter exists and photo month doesn't match, return immediately
-          if (!filters['month'][month]) {  
+          if (filters['month'] && !filters['month'][month]) {  
             return;
           }
           data += month + ",";
