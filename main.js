@@ -7,7 +7,7 @@ const {app, BrowserWindow, Menu} = electron;
 let mainWindow;
 
 // comment out for development
-//process.env.NODE_ENV = "production";
+process.env.NODE_ENV = "production";
 
 // Listen for app to be ready
 app.on('ready', function() {
